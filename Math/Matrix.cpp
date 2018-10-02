@@ -1,85 +1,119 @@
 #pragma once
-// #include <stdexcept>
+#include <stdexcept>
 #include "Matrix.h"
 
-Matrix& Matrix::operator+=(const Matrix& b) {
-//    if (len != b.len || width != b.width) throw std::invalid_argument("Matrixes aren't of the same size!");
-    for(int i = 0; i < len; i++) values[i] += b.values[i];
+Matrix::Matrix(const std::vector<Matrix::value_t> &arr, size_t columns)
+    : m_index{arr.size() / columns, columns}
+    , m_values(arr)
+{
+    if (m_values.size() != m_index.mult()) {
+        throw std::invalid_argument("Matrix::Matrix(): Matrices aren't of the same size!");
+    }
 }
 
-Matrix& Matrix::operator-=(const Matrix& b) {
-//    if (len != b.len || width != b.width) throw std::invalid_argument("Matrixes aren't of the same size!");
-    for(int i = 0; i < len; i++) values[i] -= b.values[i];
+Matrix::Matrix(size_t row, size_t column, value_t default_val)
+    : m_index{row, column}
+    , m_values(m_index.mult(), default_val)
+{
 }
 
-Matrix Matrix::operator+(const Matrix& b) {
-//    if (len != b.len || width != b.width) throw std::invalid_argument("Matrixes aren't of the same size!");
-    Matrix c(b);
-
-    for(int i = 0; i < len; i++)
-        c.values[i] += values[i];
-
-    return c;
+Matrix::Matrix(const Matrix &other)
+    : m_index{other.m_index}
+    , m_values{other.m_values}
+{
 }
 
-Matrix Matrix::operator*(const Matrix& b) const {
-    // if (width == 1 && b.width > width) return b*(*this);
-
-
-    Matrix c(b.len, width);
-
-
-    for (short i = 0; i < len; i++) {
-        for (short j = 0; j < b.width; j++) {
-            for (short k = 0; k < width; k++) {
-                c[i * width + j] += values[i * width + k] * b[k * b.width + j];
-            }
+Matrix& Matrix::operator+=(const Matrix& other)
+{
+    if (m_index.row() == other.m_index.row() && m_index.column() == other.m_index.column()) {
+        for(size_t i{0}; i < m_values.size(); ++i) {
+            m_values[i] += other.m_values[i];
         }
+        return *this;
     }
 
-
-    return c;
+    throw std::invalid_argument("Matrix::operator+=: Matrices aren't of the same size!");
 }
 
+Matrix& Matrix::operator-=(const Matrix& other) {
+    if (m_index.row() == other.m_index.row() && m_index.column() == other.m_index.column()) {
+        for(size_t i{0}; i < m_values.size(); ++i) {
+            m_values[i] -= other.m_values[i];
+        }
+        return *this;
+    }
 
-// for (short i = 0; i < b.len; i++)
-//         for(short j = 0; j < width; j++)
-//             c.values[j + i*width] += values[j + i*width] * b.values[i + j*width];
-
-
-
-    // if (b.width == 1) {
-    //     Matrix c(b);
-    //     for (i = 0; i < c.len*width; i++)
-    //         // for (j = 0; j < width; j++)
-    //             c.values[i] += b.values[i] * values[i];
-
-    //     return c;
-    // } else
-
-    // {
-// Matrix Matrix::operator*()
-
-
-double& Matrix::operator[](int i) {
-    return values[i];
+    throw std::invalid_argument("Matrix::operator-=: Matrices aren't of the same size!");
 }
 
-double Matrix::operator[](int i) const {
-    return values[i];
+Matrix Matrix::operator+(const Matrix& other) {
+    if (m_index.row() == other.m_index.row() && m_index.column() == other.m_index.column()) {
+        Matrix result{*this};
+        for(size_t i{0}; i < m_values.size(); ++i) {
+            result.m_values[i] += other.m_values[i];
+        }
+        return result;
+    }
+
+    throw std::invalid_argument("Matrix::operator+: Matrices aren't of the same size!");
 }
 
-Matrix& Matrix::operator=(const Matrix& b) {
-    if (values == b.values) return *this;
-    values = b.values;
-    width = b.width;
-    len = b.len;
+Matrix Matrix::operator*(const Matrix& other) const {
+    if (m_index.column() == other.m_index.row()) {
+        Matrix result{other.m_index.column(), m_index.row(), 0};
+        for (size_t i = 0; i <= result.m_index.row(); ++i) {
+            for (size_t j = 0; j <= result.m_index.column(); ++j) {
+                for (size_t k = 0; k <= m_index.column(); ++k) {
+                    result[Index{i, j}] = this->operator[](Index{i, k}) * other[Index{k, j}];
+                }
+            }
+        }
+        return result;
+    }
+
+    throw std::invalid_argument("Matrix::operator*: Matrix1's columns has to equal to Matrix2's rows");
+}
+
+Matrix::value_t& Matrix::operator[](const Index& index) {
+    return m_values[m_index.calc_raw_index(index)];
+}
+
+Matrix::value_t Matrix::operator[](const Index& index) const {
+    return m_values[m_index.calc_raw_index(index)];
+}
+
+Matrix& Matrix::operator=(const Matrix& other) {
+    if (this == &other) {
+        return *this;
+    }
+    m_index = other.m_index;
+    m_values = other.m_values;
+    return *this;
 }
 
 std::ostream& operator<<(std::ostream& os, const Matrix& m) {
-   for (int i = 0; i < m.len; i++) {
-       if ((i % m.width == 0) && i != 0) os << std::endl;
-       os << m.values[i] << ' ';
+   for (size_t i = 0; i < m.m_index.mult(); i++) {
+       if ((i % m.m_index.column() == 0) && i != 0) os << std::endl;
+       os << m.m_values[i] << ' ';
    }
    return os;
+}
+
+Matrix::Index::Index(size_t row, size_t column)
+    : m_row{row}
+    , m_column{column}
+{
+    if (!m_row || !m_column) {
+        throw std::invalid_argument("Matrix::Index::Index: index cannot be 0");
+    }
+}
+
+size_t Matrix::Index::calc_raw_index(const Matrix::Index &in) const
+{
+    if (m_row && m_column
+            && m_row >= in.m_row && m_column <= in.m_column)
+    {
+        return (in.m_row - 1) * m_column + in.m_column - 1;
+    }
+    throw std::invalid_argument("Matrix::Index::calc_raw_index: invalid index");
 }

@@ -4,40 +4,46 @@
 using std::vector;
 
 class Matrix {
-    vector<double> values;
-    int width;
-    size_t len;
-
+public:
+    using value_t = double;
+    class Index
+    {
+        size_t m_row{0};
+        size_t m_column{0};
     public:
-        Matrix(const std::vector<double>& arr, int w) :
-            values(arr),
-            width(w),
-            len(values.size()) {};
+        Index(size_t row, size_t column);
 
-        Matrix(int length, int w, double val = 0) : width(w), len(length) {
-            values = vector<double>(length, val);
-        }
+        size_t row() const {return m_row;}
+        size_t column() const {return m_column;}
+        size_t mult() const {return m_row * m_column; }
+        size_t calc_raw_index(const Index& in) const;
+    };
 
-        Matrix(const Matrix& a) :
-            values(a.values),
-            width(a.width),
-            len(a.len) {};
+    Matrix(const std::vector<value_t>& arr, size_t columns);
 
-        ~Matrix() {};
+    Matrix(size_t row, size_t column, value_t default_val = 0.0);
 
-        Matrix& operator+=(const Matrix& b);
+    Matrix(const Matrix& other);
 
-        Matrix& operator-=(const Matrix& b);
+    ~Matrix() = default;
 
-        Matrix operator+(const Matrix& b);
+    Matrix& operator+=(const Matrix& other);
 
-        Matrix operator*(const Matrix& b) const;
+    Matrix& operator-=(const Matrix& other);
 
-        Matrix& operator=(const Matrix& b);
+    Matrix operator+(const Matrix& other);
 
-        double& operator[](int i);
+    Matrix operator*(const Matrix& other) const;
 
-        double operator[](int i) const;
+    Matrix& operator=(const Matrix& other);
 
-       friend std::ostream& operator<<(std::ostream& os, const Matrix& m);
+    value_t& operator[](const Index& index);
+
+    value_t operator[](const Index& index) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Matrix& m);
+private:
+    Index m_index;
+    std::vector<value_t> m_values;
+
 };
