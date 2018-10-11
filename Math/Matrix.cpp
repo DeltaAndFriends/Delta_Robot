@@ -1,4 +1,4 @@
-#pragma once
+#include <iostream>
 #include <stdexcept>
 #include "Matrix.h"
 
@@ -60,11 +60,11 @@ Matrix Matrix::operator+(const Matrix& other) {
 
 Matrix Matrix::operator*(const Matrix& other) const {
     if (m_index.column() == other.m_index.row()) {
-        Matrix result{other.m_index.column(), m_index.row(), 0};
-        for (size_t i = 0; i <= result.m_index.row(); ++i) {
-            for (size_t j = 0; j <= result.m_index.column(); ++j) {
-                for (size_t k = 0; k <= m_index.column(); ++k) {
-                    result[Index{i, j}] = this->operator[](Index{i, k}) * other[Index{k, j}];
+        Matrix result{m_index.row(), other.m_index.column(), 0};
+        for (size_t i = 1; i <= result.m_index.row(); ++i) {
+            for (size_t j = 1; j <= result.m_index.column(); ++j) {
+                for (size_t k = 1; k <= m_index.column(); ++k) {
+                    result[Index{i, j}] += (*this)[Index{i, k}] * other[Index{k, j}];
                 }
             }
         }
@@ -111,7 +111,7 @@ Matrix::Index::Index(size_t row, size_t column)
 size_t Matrix::Index::calc_raw_index(const Matrix::Index &in) const
 {
     if (m_row && m_column
-            && m_row >= in.m_row && m_column <= in.m_column)
+            && m_row >= in.m_row && m_column >= in.m_column)
     {
         return (in.m_row - 1) * m_column + in.m_column - 1;
     }
