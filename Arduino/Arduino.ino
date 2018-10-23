@@ -1,3 +1,4 @@
+// sudo chmod a+rw /dev/ttyUSB0
 #include "Init.h"
 #include "Scenarios.h"
 
