@@ -4,12 +4,12 @@
 #include "Matrix.h"
 
 
-Matrix::Matrix(const std::vector<std::vector<Matrix::value_t>> &arr, size_t _row, size_t columns)
-    : row(_row), cols(columns), m_values(arr)
+Matrix::Matrix(const std::vector<std::vector<Matrix::value_t>> &arr, size_t _row, size_t _column)
+    : row(_row), cols(_column), m_values(arr), m_index{ _row, _column }
 {}
 
-Matrix::Matrix(size_t row, size_t column, value_t default_val)
-    : m_index{row, column}
+Matrix::Matrix(size_t _row, size_t _column, value_t default_val)
+    : m_index{_row, _column}, row(_row), cols(_column)
 {
 	m_values = std::vector < std::vector<value_t>>(row, std::vector<value_t>(cols, 0));
 }
@@ -68,11 +68,11 @@ Matrix Matrix::operator+(const Matrix& other) {
 }
 
 Matrix Matrix::operator*(const Matrix& other) const {
-    if (m_index.column() == other.m_index.row()) {
-        Matrix result{m_index.row(), other.m_index.column(), 0};
-        for (size_t i = 1; i <= result.m_index.row(); ++i) {
-            for (size_t j = 1; j <= result.m_index.column(); ++j) {
-                for (size_t k = 1; k <= m_index.column(); ++k) {
+    if (this->cols == other.row) {
+        Matrix result{this->row, other.cols, 0};
+        for (size_t i = 0; i < result.row; ++i) {
+            for (size_t j = 0; j < result.cols; ++j) {
+                for (size_t k = 0; k < this->cols; ++k) {
                     result[{i, j}] += (*this)[{i, k}] * other[{k, j}];
                 }
             }
@@ -84,11 +84,11 @@ Matrix Matrix::operator*(const Matrix& other) const {
 }
 
 Matrix::value_t& Matrix::operator[](const Index& index) {
-    return m_values[index.row][index.column]; //TODO something with this shit
+    return m_values[index.row()][index.column()];
 }
 
 Matrix::value_t Matrix::operator[](const Index& index) const {
-    return m_values[index.row][index.column];
+    return m_values[index.row()][index.column()];
 }
 
 Matrix& Matrix::operator=(const Matrix& other) {
@@ -128,3 +128,4 @@ Matrix::Index::Index(size_t row, size_t column)
         throw std::invalid_argument("Matrix::Index::Index: index cannot be 0");
     }
 }
+
