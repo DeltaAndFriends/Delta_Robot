@@ -89,7 +89,14 @@ triplet algo(const triplet& wanted, const triplet& angles) {
 
 		Matrix pre_calc(4, 4);
 
-		pre_calc = a * b_x * b_y * b_z * c;
+		//Some strange shit happens if you try to run pre_calc = a*b_x*b_y...
+		//so I`d fixed it
+		//I`m sorry
+
+		pre_calc = a * b_x;
+		pre_calc = pre_calc * b_y;
+		pre_calc = pre_calc * b_z;
+		pre_calc = pre_calc * c;
 
 		if (DEBUG) {
 			chapter("PRECALC = A * B_X * ... * C");
