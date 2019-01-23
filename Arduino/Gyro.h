@@ -9,9 +9,13 @@ namespace Delta
 
   enum class GYRO_DATA
   {
-    X,
-    Y,
-    qty
+    Xacc,
+    Yacc,
+    Zacc,
+    Temp,
+    Xgyro,
+    Ygyro,
+    Zgyro
   };
   static const int gyro_error{-32767};
 
@@ -25,8 +29,9 @@ namespace Delta
       void setup();
       void read();
       int get_raw(GD d) const;
-      int get(GD d) const;
+      float get(GD d) const;
     private:
+      int read_two_bytes();
       std::vector<int> m_data;
       size_t m_pin;
   };

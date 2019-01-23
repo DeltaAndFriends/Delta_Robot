@@ -10,13 +10,13 @@ namespace Delta
   const int START_reg=0x3B;  // ACCEL_XOUT_H
 
   Gyro::Gyro(GYRO_PIN pin)
-  : m_data(size_t(GD::qty))
-  , m_pin{size_t(pin)}
+//  : m_data(size_t(GD::qty))
+  : m_pin{size_t(pin)}
   {
-    for(auto &d : m_data)
-    {
-      d = 0;
-    }
+//    for(auto &d : m_data)
+//    {
+//      d = 0;
+//    }
   }
   
   Gyro::~Gyro()
@@ -67,12 +67,12 @@ namespace Delta
     if (!error_code)
     {
       Wire.requestFrom(MPU_addr,4,true);  // request a total of 14 registers
-      m_data[size_t(GD::X)]=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
-      m_data[size_t(GD::Y)]=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
+      m_data[size_t(GD::Xacc)]=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
+      m_data[size_t(GD::Yacc)]=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
     }
     else
     {
-      m_data[size_t(GD::X)] = m_data[size_t(GD::Y)] = gyro_error;      
+      m_data[size_t(GD::Xacc)] = m_data[size_t(GD::Yacc)] = gyro_error;      
     }
     digitalWrite (m_pin, LOW);    
   }
@@ -84,7 +84,7 @@ namespace Delta
     return r;
   }
 
-  int Gyro::get(GD d) const
+  float Gyro::get(GD d) const
   {
     int r = (m_data[size_t(d)] - 1000) / 160;// / 175 - 700;
     return r;

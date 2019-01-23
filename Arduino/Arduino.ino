@@ -1,6 +1,7 @@
-// sudo chmod a+rw /dev/ttyUSB0
+// sudo chmod a+rw /dev/ttYaccUSB0
 #include "Init.h"
 #include "Scenarios.h"
+//#include "Geometry.h"
 
 void setup() {
   if (DEBUG) Serial.begin(9600);
@@ -16,7 +17,7 @@ void check_mode()
   static int mode = 1;
   static int cur_mode = 0;
   if (cur_mode == mode)
-  {
+  {    //private:
     return;
   }
   cur_mode = mode;
@@ -35,6 +36,9 @@ void check_mode()
 }
 
 void loop() {
+  robot.test();
+}
+void _loop() {
   delay(100);
   robot.home();
   delay(2000);
@@ -67,5 +71,5 @@ void loop() {
     robot.test();
   }
     //if (DEBUG) Serial.println(" ");
-    delay(50000000000000000000);*/
+    dela(50000000000000000000);*/
 }

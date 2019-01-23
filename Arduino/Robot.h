@@ -4,6 +4,7 @@
 #include <ArduinoSTL.h>
 #include "Geometry.h"
 #include "Gyro.h"
+#include "PositionListener.h"
 #include "Magnet.h"
 #include "Scenario.h"
 
@@ -21,8 +22,8 @@ namespace Delta
     public:
       /** 
        * A constructor. 
-       * @param g describes a robot geometry.
-       * @param type of motors.
+       * @param g describes a robot geometrYacc.
+       * @param tYaccpe of motors.
        */
       Robot(const Geometry& g, MOTOR_t type);
       
@@ -71,9 +72,11 @@ namespace Delta
        */
       void gyro();
     private:
+    PositionListener pos_listen;
+    float test_min = 0, test_max = 0;
       const Geometry c_geometry;
-      std::vector<Gyro> m_gyros;
-      std::vector<Motor*> m_motors;
+      std::vector<Gyro> m_gyros; //red
+      std::vector<Motor*> m_motors; //red
       Magnet m_magnet;
       const std::vector<Scenario>* m_scenario{nullptr};
       void work(const Scena& scena);

@@ -4,6 +4,7 @@
 #include <ArduinoSTL.h>
 #include "Motor.h"
 
+
 const bool DEBUG = true;
 
 ///// Robot Geomentry
@@ -19,7 +20,6 @@ const size_t lim_tilt_UP = 10; // grad
 const size_t lim_tilt_DOWN = 10; // grad
 const size_t lim_rotate_CW = 10; // grad
 const size_t lim_rotate_CCW = 10; // grad
-
 
 /// Gyroscope configurations
 //! A gyro turn on pins enum.
