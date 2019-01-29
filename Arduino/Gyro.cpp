@@ -2,21 +2,17 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-namespace Delta
-{
-
   const int MPU_addr=0x68;  // I2C address of the MPU-6050
   const int PWR_reg=0x6B;  // PWR_MGMT_1
   const int START_reg=0x3B;  // ACCEL_XOUT_H
 
   Gyro::Gyro(GYRO_PIN pin)
-//  : m_data(size_t(GD::qty))
   : m_pin{size_t(pin)}
   {
-//    for(auto &d : m_data)
-//    {
-//      d = 0;
-//    }
+    for(auto &d : m_data)
+    {
+      d = 0;
+    }
   }
   
   Gyro::~Gyro()
@@ -39,13 +35,13 @@ namespace Delta
     digitalWrite (m_pin, LOW); 
   }
   
-  void Gyro::read()
+  void Gyro::read() //TODO: read each value into a vector of size a, find the medium value by removing the top and bottom 10% and find the average of what's left. Try a 3, 5, 10, 30 and compare them with excel.
   {
     digitalWrite (m_pin, HIGH);
     Wire.beginTransmission(MPU_addr);
     Wire.write(START_reg);  // starting register
     int error_code = Wire.endTransmission(false);
-    if (error_code && DEBUG)
+    if (error_code)
     {
       switch (error_code)
       {
@@ -66,9 +62,14 @@ namespace Delta
 
     if (!error_code)
     {
-      Wire.requestFrom(MPU_addr,4,true);  // request a total of 14 registers
+      Wire.requestFrom(MPU_addr,14,true);  // request a total of 14 registers
       m_data[size_t(GD::Xacc)]=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
       m_data[size_t(GD::Yacc)]=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
+	  m_data[size_t(GD::Zacc)]=Wire.read()<<8|Wire.read(); 
+      m_data[size_t(GD::Temp)]=Wire.read()<<8|Wire.read();
+	  m_data[size_t(GD::Xgyro)]=Wire.read()<<8|Wire.read(); 
+      m_data[size_t(GD::Ygyro)]=Wire.read()<<8|Wire.read();
+	  m_data[size_t(GD::Zgyro)]=Wire.read()<<8|Wire.read(); 
     }
     else
     {
@@ -84,10 +85,11 @@ namespace Delta
     return r;
   }
 
-  float Gyro::get(GD d) const
+  double Gyro::getacc(GD d) const
   {
-    int r = (m_data[size_t(d)] - 1000) / 160;// / 175 - 700;
-    return r;
+    return m_data[size_t(d)]/16384.0; // get acceleration in gs
   }
-      
-} // namespace Delta
+
+  {
+    return alpha = atan2(-1*(m_gyros.at(i).getacc(GD::Zacc), m_gyros.at(i).getacc(GD::Xacc)))*180/3.14159265;
+  }

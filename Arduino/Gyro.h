@@ -2,18 +2,22 @@
 #define Gyro_h
 
 #include <ArduinoSTL.h>
-#include "Config.h"
 
-namespace Delta
-{
+/// Gyroscope configurations
+//! A gyro turn on pins enum.
+enum class GYRO_PIN {
+  _1 = 37,
+  _2 = 39,
+  _3 = 35,
+};
 
-  enum class GYRO_DATA
+ enum class GYRO_DATA
   {
     Xacc,
     Yacc,
     Zacc,
-    Temp,
-    Xgyro,
+	Temp,
+	Xgyro,
     Ygyro,
     Zgyro
   };
@@ -29,13 +33,11 @@ namespace Delta
       void setup();
       void read();
       int get_raw(GD d) const;
-      float get(GD d) const;
+      double getacc(GD d) const;
+      double get(GD d) const;
     private:
-      int read_two_bytes();
       std::vector<int> m_data;
       size_t m_pin;
   };
-
-} // namespace Delta
 
 #endif // Gyro_h

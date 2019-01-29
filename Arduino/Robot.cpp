@@ -181,6 +181,7 @@ void Robot::test()
   int X[3] = {0, 0, 0};
   int Y[3] = {0, 0, 0};
 
+  PositionListener pos_listen = new PositionListener();
   Position p = pos_listen.getFiltered();
   X[0] = p.roll_1;
   X[1] = p.roll_2;

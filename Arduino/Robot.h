@@ -72,7 +72,6 @@ namespace Delta
        */
       void gyro();
     private:
-    PositionListener pos_listen;
     float test_min = 0, test_max = 0;
       const Geometry c_geometry;
       std::vector<Gyro> m_gyros; //red

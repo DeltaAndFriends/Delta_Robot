@@ -36,7 +36,7 @@ void check_mode()
 }
 
 void loop() {
-  robot.test();
+  //robot.test();
 }
 void _loop() {
   delay(100);
