@@ -153,13 +153,13 @@ void Robot::achieve(double x_1, double x_2, double x_3, double y_1, double y_2, 
     X = m_gyros.at(i).get(Angle::pitch);
     Y = m_gyros.at(i).get(Angle::roll);
     
-   Serial.println(motor->grad_to_steps(X-XtoAchieve[i]));
-   Serial.println(motor->grad_to_steps(YtoAchieve[i])-Y);
+   //Serial.println(motor->grad_to_steps(X-XtoAchieve[i]));
+   //Serial.println(motor->grad_to_steps(YtoAchieve[i])-Y);
    prepareMovement(i, motor->grad_to_steps(X-XtoAchieve[i]));
    prepareMovement(i+3, motor->grad_to_steps(YtoAchieve[i]-Y));
     
   }
-  Serial.println("rw1");
+  //Serial.println("rw1");
   
   runAndWait();
   /*for (size_t i = 0; i < gyrosSize; ++i) {    

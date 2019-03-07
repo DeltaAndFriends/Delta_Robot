@@ -29,7 +29,7 @@
       double getacc(GD d) const;
       double get(Angle a);
     private:
-      const int p_tilt_switch = 34; 
+      const int p_tilt_switch = 23; 
       int tilt_switch; 
       std::vector<int> m_data;
       size_t m_pin;

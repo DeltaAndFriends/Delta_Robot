@@ -89,9 +89,9 @@
     return m_data[size_t(d)]/16384.0; // get acceleration in gs
   }
   
-  double Gyro::get(Angle a)
+double Gyro::get(Angle a)
   {
-    tilt_switch = digitalRead(p_tilt_switch) ? -1 : 1;
+    tilt_switch = digitalRead(p_tilt_switch) ? 1 : -1;
     
     switch (a)
     {
