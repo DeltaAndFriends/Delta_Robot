@@ -1,23 +1,16 @@
 #ifndef Gyro_h
 #define Gyro_h
 
+#include "Config.h"
 #include <ArduinoSTL.h>
-
-/// Gyroscope configurations
-//! A gyro turn on pins enum.
-enum class GYRO_PIN {
-  _1 = 37,
-  _2 = 39,
-  _3 = 35,
-};
 
  enum class GYRO_DATA
   {
     Xacc,
     Yacc,
     Zacc,
-	Temp,
-	Xgyro,
+	  Temp,
+	  Xgyro,
     Ygyro,
     Zgyro
   };
@@ -34,8 +27,10 @@ enum class GYRO_PIN {
       void read();
       int get_raw(GD d) const;
       double getacc(GD d) const;
-      double get(GD d) const;
+      double get(Angle a);
     private:
+      const int p_tilt_switch = 34; 
+      int tilt_switch; 
       std::vector<int> m_data;
       size_t m_pin;
   };

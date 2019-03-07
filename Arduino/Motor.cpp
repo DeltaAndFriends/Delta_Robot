@@ -9,18 +9,7 @@ namespace Delta
   /*!
    * A stepper motor divides a full rotation into a number of equal steps.
    */
-  class Stepper : public Motor
-  {
-    public:
-      Stepper();
-      ~Stepper() override;
-      void setup(size_t number) override;
-      void rotate(int angle) override;
-    private:
-      void step (int dir);
-      int grad10_to_steps (int grad10);
-      size_t m_number{-1};
-  };
+  
   
   Stepper::Stepper()
   {
@@ -64,13 +53,17 @@ namespace Delta
         break;
      }
     digitalWrite (motors_config.at(m_number).ST, HIGH);
-    delayMicroseconds(3000);
+    delayMicroseconds(2000);
     digitalWrite (motors_config.at(m_number).ST, LOW);
    }
 
   int Stepper::grad10_to_steps (int grad10)
   {
     return abs(round(float(grad10)*motors_config.at(m_number).SPR/3600)); 
+  }
+  int Stepper::grad_to_steps (double grad)
+  {
+    return double(grad)*motors_config.at(m_number).SPR/360; 
   }
   
   //! A geared motor class

@@ -4,7 +4,6 @@
 #include <ArduinoSTL.h>
 #include "Geometry.h"
 #include "Gyro.h"
-#include "PositionListener.h"
 #include "Magnet.h"
 #include "Scenario.h"
 
@@ -22,8 +21,8 @@ namespace Delta
     public:
       /** 
        * A constructor. 
-       * @param g describes a robot geometrYacc.
-       * @param tYaccpe of motors.
+       * @param g describes a robot geometry.
+       * @param type of motors.
        */
       Robot(const Geometry& g, MOTOR_t type);
       
@@ -53,7 +52,12 @@ namespace Delta
       /**
        * Achieve home position
        */
+      
       void home();
+      /**
+       * Move to the parking position
+       */
+       
       void oldhome();
       /**
        * Move to the parking position
@@ -64,7 +68,11 @@ namespace Delta
        * 
        */
 
-      void achieve(int x_1, int x_2, int x_3, int y_1, int y_2, int y_3);
+      void moveMotors(int x_1, int x_2, int x_3, int y_1, int y_2, int y_3);
+
+      void achieve(double x_1, double x_2, double x_3, double y_1, double y_2, double y_3);
+      void achieveUpdated(double x_1, double x_2, double x_3, double y_1, double y_2, double y_3);
+
       void test();
 
       /**
@@ -72,10 +80,9 @@ namespace Delta
        */
       void gyro();
     private:
-    float test_min = 0, test_max = 0;
       const Geometry c_geometry;
-      std::vector<Gyro> m_gyros; //red
-      std::vector<Motor*> m_motors; //red
+      std::vector<Gyro> m_gyros;
+      std::vector<Motor*> m_motors;
       Magnet m_magnet;
       const std::vector<Scenario>* m_scenario{nullptr};
       void work(const Scena& scena);

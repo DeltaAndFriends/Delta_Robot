@@ -2,6 +2,8 @@
 #include <ArduinoSTL.h>
 #include "Robot.h"
 #include "Motor.h"
+//#include "Motor.cpp"
+#include "Stepper.h"
 #include <algorithm> 
 
 namespace Delta
@@ -9,8 +11,8 @@ namespace Delta
 
 Robot::Robot(const Geometry& g, MOTOR_t type)
   : c_geometry(g)
-  , m_gyros({Gyro{GYRO_PIN::_1}, Gyro{GYRO_PIN::_2}, Gyro{GYRO_PIN::_3}}) //red
-  , m_motors({create_motor(type), create_motor(type), create_motor(type), create_motor(type), create_motor(type), create_motor(type)}) //red
+  , m_gyros({Gyro{GYRO_PIN::_1}, Gyro{GYRO_PIN::_2}, Gyro{GYRO_PIN::_3}}) //create 3 gyros on pins _1, _2, _3 from Config.h
+  , m_motors({create_motor(type), create_motor(type), create_motor(type), create_motor(type), create_motor(type), create_motor(type)}) //create 6 motors
 {
 }
 
@@ -24,16 +26,16 @@ Robot::~Robot()
 
 void Robot::setup()
 {
-  //if(DEBUG) std::cout << "START " << std::endl;
-  for (auto g : m_gyros)
+  steppersInit();
+  for (auto g : m_gyros) //setup gyros
   {
     g.setup();
   }
-  for (size_t i = 0; i < m_motors.size(); ++i)
+  for (size_t i = 0; i < m_motors.size(); ++i) //setup motors
   {
     m_motors.at(i)->setup(i);
   }
-  m_magnet.setup();
+  m_magnet.setup(); //setup magnet
 }
 
 void Robot::set_scenario(const std::vector<Scenario>& scenario)
@@ -68,33 +70,34 @@ void Robot::gyro()
 
 void Robot::home()
 {
-    int X{0};
+  
+    double pitch{0};
   for (size_t i = 0; i < m_gyros.size(); ++i) {
     m_gyros.at(i).read();
-    X = m_gyros.at(i).get(GD::Xacc);
-    while(X != 0)
+    pitch = m_gyros.at(i).get(Angle::pitch);
+    while(pitch > 1 || pitch < -1)
     {
-      if(DEBUG) std::cout << "Gyro #" << i+1 << " X position: " << X << " so I rotate for " << -6*X << " steps" ;
-          m_motors.at(i)->rotate(-6*X);
+      if(DEBUG) std::cout << "Gyro #" << i+1 << " pitch: " << pitch << " so I rotate for " << -6*pitch << " steps" ;
+          m_motors.at(i)->rotate(-6*pitch);
           delay(30);
           m_gyros.at(i).read();
-          X = m_gyros.at(i).get(GD::Xacc);
-      if(DEBUG) std::cout << " and get: " << X << std::endl;
+          pitch = m_gyros.at(i).get(Angle::pitch);
+      if(DEBUG) std::cout << " and get: " << pitch << std::endl;
     }
   }
 
-  int Yacc{0};
+  double roll{0};
   for (size_t i = 0; i < m_gyros.size(); ++i) {
     m_gyros.at(i).read();
-    Yacc = m_gyros.at(i).get(GD::Yacc);
-    while(Yacc != 0)
+    roll = m_gyros.at(i).get(Angle::roll);
+    while(roll  > 1 || roll < -1)
     {
-      if(DEBUG) std::cout << "Gyro #" << i+1 << " y position: " << Yacc << " so I rotate for " << -3*Yacc << " steps";
-          m_motors.at(i+3)->rotate(-3*Yacc);
+      if(DEBUG) std::cout << "Gyro #" << i+1 << " roll: " << roll << " so I rotate for " << 3*roll << " steps";
+          m_motors.at(i+3)->rotate(3*roll);
           delay(30);
           m_gyros.at(i).read();
-          Yacc = m_gyros.at(i).get(GD::Yacc);
-      if(DEBUG) std::cout << " and get: " << Yacc << std::endl;
+          roll = m_gyros.at(i).get(Angle::roll);
+      if(DEBUG) std::cout << " and get: " << roll << std::endl;
     }
   }
 }
@@ -106,11 +109,11 @@ void Robot::oldhome() //it is not good, but it works (it doesn't)
   const int step = 5;
   for (size_t i = 0; i < m_gyros.size(); ++i) {
     m_gyros.at(i).read();
-    X = m_gyros.at(i).get(GD::Xacc);
+    X = m_gyros.at(i).get(Angle::pitch);
     if(DEBUG) std::cout << "START " << i+1 << std::endl;
     while (X > 10 || X < -10)
     {
-      if(m_gyros.at(i).get(GD::Xacc) != gyro_error && m_gyros.at(i).get(GD::Yacc) != gyro_error)
+      if(m_gyros.at(i).get(Angle::pitch) != gyro_error && m_gyros.at(i).get(Angle::roll) != gyro_error)
       {
        if(DEBUG) std::cout << X << " " << i+1 << std::endl;
        m_motors.at(i)->rotate(step * (X < -threshold ? 1 : -1));
@@ -121,43 +124,98 @@ void Robot::oldhome() //it is not good, but it works (it doesn't)
          m_gyros.at(i).read();
          if(x_no_change && DEBUG) std::cout << "gyro doesn't change after turn" << std::endl;
          x_no_change = true;
-       } while (X == m_gyros.at(i).get(GD::Xacc));
-       X = m_gyros.at(i).get(GD::Xacc);}
+       } while (X == m_gyros.at(i).get(Angle::pitch));
+       X = m_gyros.at(i).get(Angle::pitch);}
     }
   }
 }
-
-void Robot::achieve(int x_1, int x_2, int x_3, int y_1, int y_2, int y_3)
+void Robot::moveMotors(int x_1, int x_2, int x_3, int y_1, int y_2, int y_3){
+  prepareMovement( 0, x_1 );
+  prepareMovement( 1,  x_2 );
+  prepareMovement( 2, x_3 );
+  prepareMovement( 3, y_1 );
+  prepareMovement( 4, y_2 );
+  prepareMovement( 5, y_3 );
+  runAndWait();
+}
+void Robot::achieve(double x_1, double x_2, double x_3, double y_1, double y_2, double y_3)
 {
-    int XtoAchieve[3] = {x_1, x_2, x_3};
-    int YtoAchieve[3] = {y_1, y_2, y_3};
-    int X{0};
+  double XtoAchieve[3] = {x_1, x_2, x_3};
+  double YtoAchieve[3] = {y_1, y_2, y_3};
+  double X{0};
+  double Y{0};
+  const int tolerance = 1000;
+  const int gyrosSize = m_gyros.size();
+  for(int i = 0; i < gyrosSize; i++){
+    Stepper* motor = m_motors.at(i);
+    delay(100);
+    m_gyros.at(i).read();
+    X = m_gyros.at(i).get(Angle::pitch);
+    Y = m_gyros.at(i).get(Angle::roll);
+    
+   Serial.println(motor->grad_to_steps(X-XtoAchieve[i]));
+   Serial.println(motor->grad_to_steps(YtoAchieve[i])-Y);
+   prepareMovement(i, motor->grad_to_steps(X-XtoAchieve[i]));
+   prepareMovement(i+3, motor->grad_to_steps(YtoAchieve[i]-Y));
+    
+  }
+  Serial.println("rw1");
+  
+  runAndWait();
+  /*for (size_t i = 0; i < gyrosSize; ++i) {    
+    while(abs(XtoAchieve[i]-X) > tolerance)
+    {
+      //if(DEBUG) std::cout << "Gyro #" << i+1 << " X position: " << X << " so I rotate for " << 3*(XtoAchieve[i] - X) << " steps" ;
+          Stepper* motor = m_motors.at(i);
+          prepareMovement(i, motor->grad_to_steps(X - XtoAchieve[i]));
+          runAndWait();
+          m_gyros.at(i).read();
+          X = m_gyros.at(i).get(Angle::pitch);
+      //if(DEBUG) std::cout << " and get: " << X << std::endl;
+    }
+    while(abs(YtoAchieve[i]-Y) > tolerance)
+    {
+      //if(DEBUG) std::cout << "Gyro #" << i+1 << " X position: " << X << " so I rotate for " << 3*(XtoAchieve[i] - X) << " steps" ;
+          Stepper* motor = m_motors.at(i+3);
+          prepareMovement(i+3, motor->grad_to_steps(YtoAchieve[i]-Y));
+          runAndWait();
+          m_gyros.at(i).read();
+          X = m_gyros.at(i).get(Angle::roll);
+      //if(DEBUG) std::cout << " and get: " << X << std::endl;
+    }
+  }*/
+}
+void Robot::achieveUpdated(double x_1, double x_2, double x_3, double y_1, double y_2, double y_3)
+{
+    double XtoAchieve[3] = {x_1, x_2, x_3};
+    double YtoAchieve[3] = {y_1, y_2, y_3};
+    double X{0};
   for (size_t i = 0; i < m_gyros.size(); ++i) {
     m_gyros.at(i).read();
-    X = m_gyros.at(i).get(GD::Xacc);
-    while(X != XtoAchieve[i])
+    X = m_gyros.at(i).get(Angle::pitch);
+    while(X >= XtoAchieve[i] + 20 || X <= XtoAchieve[i] - 20)
     {
-      if(DEBUG) std::cout << "Gyro #" << i+1 << " X position: " << X << " so I rotate for " << 6*(XtoAchieve[i] - X) << " steps" ;
-          m_motors.at(i)->rotate(6*(XtoAchieve[i] - X));
+      if(DEBUG) std::cout << "Gyro #" << i+1 << " X position: " << X << " so I rotate for " << 3*(XtoAchieve[i] - X) << " steps" ;
+          m_motors.at(i)->rotate(3*(XtoAchieve[i] - X));
           delay(100);
           m_gyros.at(i).read();
-          X = m_gyros.at(i).get(GD::Xacc);
+          X = m_gyros.at(i).get(Angle::pitch);
       if(DEBUG) std::cout << " and get: " << X << std::endl;
     }
   }
 
-  int Yacc{0};
+  double Y{0};
   for (size_t i = 0; i < m_gyros.size(); ++i) {
     m_gyros.at(i).read();
-    Yacc = m_gyros.at(i).get(GD::Yacc);
-    while(Yacc != YtoAchieve[i])
+    Y = m_gyros.at(i).get(Angle::roll);
+    while(Y >= YtoAchieve[i]+20|| Y <= YtoAchieve[i]-20)
     {
-      if(DEBUG) std::cout << "GYaccro #" << i+1 << " Yacc position: " << Yacc << " so I rotate for " << 3*(YtoAchieve[i] - Yacc) << " steps";
-          m_motors.at(i+3)->rotate(3*(YtoAchieve[i] - Yacc));
+      if(DEBUG) std::cout << "Gyro #" << i+1 << " Y position: " << Y << " so I rotate for " << 3*(YtoAchieve[i] - Y) << " steps";
+          m_motors.at(i+3)->rotate(3*(Y - YtoAchieve[i]));
           delay(100);
           m_gyros.at(i).read();
-          Yacc = m_gyros.at(i).get(GD::Yacc);
-      if(DEBUG) std::cout << " and get: " << Yacc << std::endl;
+          Y = m_gyros.at(i).get(Angle::roll);
+      if(DEBUG) std::cout << " and get: " << Y << std::endl;
     }
   }
 }
@@ -166,9 +224,9 @@ void Robot::park()
 {
   for (size_t i = 0; i < 3; ++i) {
     m_gyros.at(1).read();
-    while (m_gyros.at(i).get(GD::Xacc) > -680)
+    while (m_gyros.at(i).get(Angle::pitch) > -680)
     {
-        if(DEBUG) std::cout << m_gyros.at(i).get(GD::Xacc) << " parking " << i+1 << std::endl;
+        if(DEBUG) std::cout << m_gyros.at(i).get(Angle::pitch) << " parking " << i+1 << std::endl;
         m_motors.at(i)->rotate(-5);
     }
       delay(10);
@@ -178,57 +236,36 @@ void Robot::park()
 
 void Robot::test()
 {
-  int X[3] = {0, 0, 0};
-  int Y[3] = {0, 0, 0};
-
-  PositionListener pos_listen = new PositionListener();
-  Position p = pos_listen.getFiltered();
-  X[0] = p.roll_1;
-  X[1] = p.roll_2;
-  X[2] = p.roll_3;
-  Y[0] = p.pitch_1;
-  Y[1] = p.pitch_2;
-  Y[2] = p.pitch_3;
-  //  for (size_t i = 0; i < m_gyros.size(); ++i) {
-  //     m_gyros.at(i).read();
-  //     X[i] = m_gyros.at(i).get(GD::Xacc);
-  //     Yacc[i] = m_gyros.at(i).get(GD::Yacc);
-  //   }
-
-    if(X[0] > test_max)
-    {
-      test_max = X[0];
+  double pitch[3] = {0, 0, 0};
+  double roll[3] = {0, 0, 0};
+   for (size_t i = 0; i < m_gyros.size(); ++i) {
+      m_gyros.at(i).read();
+      pitch[i] = m_gyros.at(i).get(Angle::pitch);
+      roll[i] = m_gyros.at(i).get(Angle::roll);
     }
-
-    if(X[0] < test_min)
-    {
-      test_min = X[0];
-    }
-
-    std::cout << "Min: " << test_min << " Max: " << test_max << " Current: " << X[0] << std::endl;
     //std::sort(Z_in, Z_in + 5);
-  //if(DEBUG) std::cout << "GYaccro #1 X position: " << X[0] << ", gYaccro #2 X position: " << X[1] << ", gYaccro #3 X position: " << X[2] << 
-  //", gYaccro #1 Yacc position: " << Yacc[0] << ", gYaccro #2 Yacc position: " << Yacc[1] << ", gYaccro #3 Yacc position: " << Yacc[2] << std::endl;
+  if(DEBUG) std::cout << "Gyro #1 pitch: " << pitch[0] << ", gyro #2 pitch: " << pitch[1] << ", gyro #3 pitch: " << pitch[2] << 
+  ", gyro #1 roll: " << roll[0] << ", gyro #2 roll: " << roll[1] << ", gyro #3 roll: " << roll[2] << std::endl;
 }
 /*{
     int X[3] = {0, 50, -50};
-    int Yacc[3] = {0, 10, -10};
+    int Y[3] = {0, 10, -10};
   for (size_t i = 0; i < m_gyros.size(); ++i) {
     int X_t[5] = {0, 0, 0, 0, 0};
     for (size_t j = 0; j < 5; ++j)
     {
       m_gyros.at(i).read();
-      X_t[j] = m_gyros.at(i).get(GD::Xacc);
-      if(DEBUG) std::cout << " gYaccro #" << i << ": " << X_t[i];
+      X_t[j] = m_gyros.at(i).get(Angle::pitch);
+      if(DEBUG) std::cout << " gyro #" << i << ": " << X_t[i];
     }
     int X_o[5] = {0, 0, 0, 0, 0};
     std::sort(X_t, X_o);
     X[i] = X_o[2];
   }
-//  Yacc!!!!!
-  if(DEBUG) std::cout << X[0] << ", " << X[1] << ", " << X[2] << ", " << Yacc[0] << ", " << Yacc[1] << ", " << Yacc[2] << std::endl;
-  /*if(DEBUG) std::cout << "GYaccro #1 X position: " << X[0] << ", gYaccro #2 X position: " << X[1] << ", gYaccro #3 X position: " << X[2] << 
-  ", gYaccro #1 Yacc position: " << Yacc[0] << ", gYaccro #2 Yacc position: " << Yacc[1] << ", gYaccro #3 Yacc position: " << Yacc[2] << std::endl;*/
+//  Y!!!!!
+  if(DEBUG) std::cout << X[0] << ", " << X[1] << ", " << X[2] << ", " << Y[0] << ", " << Y[1] << ", " << Y[2] << std::endl;
+  /*if(DEBUG) std::cout << "Gyro #1 X position: " << X[0] << ", gyro #2 X position: " << X[1] << ", gyro #3 X position: " << X[2] << 
+  ", gyro #1 Y position: " << Y[0] << ", gyro #2 Y position: " << Y[1] << ", gyro #3 Y position: " << Y[2] << std::endl;*/
 
 //  for(int s = 0; s > -400; s -= 100)
 //  {
@@ -244,7 +281,7 @@ void Robot::test()
 //    {
 //      m_motors.at(i)->rotate(-100); 
 //    }
-//  }//turn one waYacc
+//  }//turn one way
 //
 //  delay(500);
 //  
@@ -254,7 +291,7 @@ void Robot::test()
 //    {
 //      m_motors.at(i)->rotate(100); 
 //    }
-//  }//turn the other waYacc
+//  }//turn the other way
 //
 //  delay(500);
 //
@@ -264,7 +301,7 @@ void Robot::test()
 //    {
 //      m_motors.at(i)->rotate(-100); 
 //    }
-//  }//turn one waYacc
+//  }//turn one way
 //
 //  for(int s = 0; s > -900; s -= 100)
 //  {
@@ -305,7 +342,7 @@ void Robot::work(const Scena& scena)
     for (auto g : m_gyros)
     {
       g.read();
-      if(DEBUG) std::cout << g.get(GD::Xacc) << ", " << g.get(GD::Yacc) << " | ";
+      if(DEBUG) std::cout << g.get(Angle::pitch) << ", " << g.get(Angle::roll) << " | ";
     }
     if(DEBUG) std::cout << std::endl;
 

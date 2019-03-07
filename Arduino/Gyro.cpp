@@ -81,15 +81,29 @@
 
   int Gyro::get_raw(GD d) const
   {
-    int r = m_data[size_t(d)];
-    return r;
+    return m_data[size_t(d)];
   }
 
   double Gyro::getacc(GD d) const
   {
     return m_data[size_t(d)]/16384.0; // get acceleration in gs
   }
-
+  
+  double Gyro::get(Angle a)
   {
-    return alpha = atan2(-1*(m_gyros.at(i).getacc(GD::Zacc), m_gyros.at(i).getacc(GD::Xacc)))*180/3.14159265;
+    tilt_switch = digitalRead(p_tilt_switch) ? -1 : 1;
+    
+    switch (a)
+    {
+      case Angle::pitch :
+      return tilt_switch * atan2(getacc(GD::Xacc), sqrt(getacc(GD::Yacc)*getacc(GD::Yacc) + getacc(GD::Zacc)*getacc(GD::Zacc)))*180/3.14159265; //ADD G SENSOR TO POSITION LISTENER AND 
+      //MULTIPLY BOTH PITCH AND ROLL BY -1 IF THE SENSOR IS UPSIDE DOWN
+      //atan(X/sqrt(Y^2+Z^2)
+      break;
+      case Angle::roll :
+      return tilt_switch * -atan2(getacc(GD::Yacc), sqrt(getacc(GD::Xacc)*getacc(GD::Xacc) + getacc(GD::Zacc)*getacc(GD::Zacc)))*180/3.14159265;
+      //-atan(Y/sqrt(X^2+Z^2)
+      break;
+      default : break;
+    }
   }
