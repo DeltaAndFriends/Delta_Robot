@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <stdexcept>
+#include <utility>
+#include <cmath>
 #include "Math.h"
 
 Matrix::Matrix(const std::vector<std::vector<Matrix::value_t>> &arr, size_t _row, size_t _column)
@@ -118,7 +120,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix& m) {
    return os;
 }
 
-Matrix::Index::Index(const std::pair<size_t, size_t> pos)
+Matrix::Index::Index(const std::pair<size_t, size_t>& pos)
 	: m_row{ pos.first }
 	, m_column{ pos.second }
 {
@@ -137,27 +139,39 @@ Matrix::Index::Index(size_t row, size_t column)
 }
 
 
-Point3D Point3D::operator-(const Point3D& p) {
+Point3D& Point3D::operator-(const Point3D& p) {
   Point3D ans(x - p.x, y - p.y, z - p.z);
   return ans;
 }
 
-Point3D Point3D::operator-() {
+Point3D& Point3D::operator-() {
   Point3D ans(-x, -y, -z);
   return ans;
 }
 
-Point3D Point3D::operator+(const Point3D& p) {
+Point3D& Point3D::operator+(const Point3D& p) {
   Point3D ans(x + p.x, y + p.y, z + p.z);
   return ans;
 }
 
-void Point3D::operator=(const Point3D& p) {
+Point3D& Point3D::operator=(const Point3D& p) {
   x = p.x;
   y = p.y;
   z = p.z;
+  return *this;
 }
 
 bool Point3D::operator==(const Point3D& p) const {
   return bool(x == p.x && y == p.y && z == p.z);
+}
+
+std::pair<Sphere, Plane> find_sphere_intersections(const Sphere& a, const Sphere& b) {
+  double d = distance(a.m_center, b.m_center);
+  assert(d > a.m_radius + b.m_radius);
+  assert(d < abs(a.m_radius - b.m_radius));
+  assert(d == 0 && a.m_center == b.m_center);
+
+  double r_a = (pow(a.m_radius, 2) - pow(b.m_radius, 2) + pow(d, 2)) / (2 * d)
+  double h = sqrt(pow(a.m_radius, 2) - pow(r_a, 2));
+
 }
