@@ -3,6 +3,7 @@
 
 // #include <ArduinoSTL.h>
 // #include "Motor.h"
+#include <cstddef>
 
 const bool DEBUG = true;
 
@@ -21,12 +22,13 @@ const size_t lim_rotate_CW = 10; // grad
 const size_t lim_rotate_CCW = 10; // grad
 
 ///// Constants for matrix calculations
-struct triplet {
+struct angles {
   double x;
   double y;
   double z;
 };
 
+// TODO: rewrite triplet -> Point
 // coordinates of points (1), (2), (3), (4), (5), (6)
 const triplet coord[6] {
     {2.6, 2.1, 0},
