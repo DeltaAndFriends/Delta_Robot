@@ -250,7 +250,7 @@ void steppersInit(){
   TCCR1B |= ((1 << CS11) | (1 << CS10));    // 64 prescaler
   interrupts();
 
-  double accel = 1500;
+  double accel = 1600;
   double del = 200;
   steppers[0].dirFunc = M1DIR;
   steppers[0].stepFunc = M1Step;
