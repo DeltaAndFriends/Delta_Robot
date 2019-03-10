@@ -2,8 +2,19 @@
 #include "Init.h"
 #include "Scenarios.h"
 
+const int buttonPin = 16;    // the number of the pushbutton pin
+int buttonState;             // the current reading from the input pin
+int lastButtonState = LOW;   // the previous reading from the input pin
+bool State = false;
+// the following variables are unsigned longs because the time, measured in
+// milliseconds, will quickly become a bigger number than can be stored in an int.
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
+
 void setup() {
   Serial.begin(2000000);
+  pinMode(buttonPin, INPUT);
   if (DEBUG) Serial.begin(9600);
   if (DEBUG) Serial.println("Hi");
   //if(DEBUG) std::cout << "START " << std::endl;
@@ -108,8 +119,14 @@ int arr[72][6] = {
     {32, -43, 7, 0, 0, 0},
     {28, -42, 9, 0, 0, 0},
     {28, -42, 9, 0, 0, 0}};
+
 void loop() {
   delay(10);
+
+  /*while(1){
+    gyro_on_demand();
+    delay(100);
+  }*/
 
   while(1){
 
@@ -131,4 +148,83 @@ void loop() {
     }
   }
   while(1);
+}
+
+  void gyro_check() {
+    for(int i = 0; i < 3; i++){
+      robot.m_gyros.at(i).read();
+    }
+  
+      Serial.print(robot.m_gyros.at(0).get(Angle::pitch));
+      Serial.print(", ");
+      Serial.print(robot.m_gyros.at(1).get(Angle::pitch));
+      Serial.print(", ");
+      Serial.print(robot.m_gyros.at(2).get(Angle::pitch));
+      Serial.print(", ");
+
+      Serial.print(robot.m_gyros.at(0).get(Angle::roll));
+      Serial.print(", ");
+      Serial.print(robot.m_gyros.at(1).get(Angle::roll));
+      Serial.print(", ");
+      Serial.print(robot.m_gyros.at(2).get(Angle::roll));
+
+      Serial.println();
+      delay(100);
+  /*
+    for(int i = 0; i < 3; ++i){
+      robot.m_gyros.at(i).read();
+      Serial.print(robot.m_gyros.at(i).get(Angle::pitch));
+      Serial.print(", ");
+    }
+    
+    for(int i = 0; i < 2; ++i){
+      Serial.print(robot.m_gyros.at(i).get(Angle::roll));
+      Serial.print(", ");
+    }
+    Serial.println(robot.m_gyros.at(2).get(Angle::roll));
+*/
+  }
+
+  int gyroFlag = 0;
+  
+  void gyro_on_demand(){
+  // read the state of the switch into a local variable:
+  int reading = digitalRead(buttonPin);
+
+  // check to see if you just pressed the button
+  // (i.e. the input went from LOW to HIGH), and you've waited long enough
+  // since the last press to ignore any noise:
+
+  // If the switch changed, due to noise or pressing:
+  if (reading != lastButtonState) {
+    // reset the debouncing timer
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    // whatever the reading is at, it's been there for longer than the debounce
+    // delay, so take it as the actual current state:
+
+    // if the button state has changed:
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      // only toggle the LED if the new button state is HIGH
+      if (buttonState == HIGH) {
+        State = !State;
+      }
+    }
+  }
+
+  if(buttonState && gyroFlag)
+  {
+    gyro_check(); //yay finally 
+    gyroFlag = 0;
+  }
+  if(!buttonState){
+    gyroFlag = 1;
+  }
+  
+  // save the reading. Next time through the loop, it'll be the lastButtonState:
+  lastButtonState = reading;
 }
