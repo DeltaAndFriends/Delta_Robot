@@ -123,10 +123,10 @@ int arr[72][6] = {
 void loop() {
   delay(10);
 
-  /*while(1){
+  while(1){
     gyro_on_demand();
     delay(100);
-  }*/
+  }
 
   while(1){
 
@@ -149,6 +149,31 @@ void loop() {
   }
   while(1);
 }
+
+float gyro_last_data[6] = {0, 0, 0, 0, 0, 0};
+float gyro_current_data[6] = {0, 0, 0, 0, 0, 0};
+
+void gyro_vector() {
+    for(int i = 0; i < 3; i++){
+      robot.m_gyros.at(i).read();
+    }
+
+    for(int i = 0; i < 3; ++i)
+    {
+      gyro_current_data[i] = robot.m_gyros.at(i).get(Angle::pitch);
+      gyro_current_data[i+3] = robot.m_gyros.at(i).get(Angle::roll);
+    }
+
+    Serial.print("(");
+    for (int i = 0; i < 6; ++i)
+    {
+    Serial.print(round((gyro_current_data[i] - gyro_last_data[i])*80/9));
+    Serial.print(", ");
+    gyro_last_data[i] = gyro_current_data[i];
+    }
+    Serial.println("\b\b)");
+      delay(100);
+  }
 
   void gyro_check() {
     for(int i = 0; i < 3; i++){
@@ -218,7 +243,7 @@ void loop() {
 
   if(buttonState && gyroFlag)
   {
-    gyro_check(); //yay finally 
+    gyro_vector(); //gyro_check(); //yay finally 
     gyroFlag = 0;
   }
   if(!buttonState){
