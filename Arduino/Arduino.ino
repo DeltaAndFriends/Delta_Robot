@@ -161,8 +161,8 @@ void gyro_vector() {
 
     for(int i = 0; i < 3; ++i)
     {
-      gyro_current_data[i] = robot.m_gyros.at(i).get(Angle::pitch);
-      gyro_current_data[i+3] = robot.m_gyros.at(i).get(Angle::roll);
+      gyro_current_data[i] = robot.m_gyros.at(i).getAvg(Angle::pitch);
+      gyro_current_data[i+3] = robot.m_gyros.at(i).getAvg(Angle::roll);
     }
 
     Serial.print("(");

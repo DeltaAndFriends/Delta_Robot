@@ -109,7 +109,7 @@ double Gyro::get(Angle a)
   }
 }
 double Gyro::getAvg(Angle a){
-  const int ITER_CNT = 5;
+  const int ITER_CNT = 30;
   double pitches[ITER_CNT];
   double rolls[ITER_CNT];
   for(int i = 0; i < ITER_CNT; i++ ){
@@ -129,7 +129,7 @@ double Gyro::getAvg(Angle a){
       break;
   }
 }
-void isort(double *a, int n)
+void Gyro::isort(double *a, int n)
 {
  for (int i = 1; i < n; ++i)
  {
