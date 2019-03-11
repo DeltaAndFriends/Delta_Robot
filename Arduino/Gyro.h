@@ -28,7 +28,9 @@
       int get_raw(GD d) const;
       double getacc(GD d) const;
       double get(Angle a);
+      double getAvg(Angle a);
     private:
+      void isort(double *a, int n);
       const int p_tilt_switch = 23; 
       int tilt_switch; 
       std::vector<int> m_data;

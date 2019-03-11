@@ -90,20 +90,55 @@
   }
   
 double Gyro::get(Angle a)
+{
+  tilt_switch = digitalRead(p_tilt_switch) ? 1 : -1;
+
+  switch (a)
   {
-    tilt_switch = digitalRead(p_tilt_switch) ? 1 : -1;
-    
-    switch (a)
-    {
-      case Angle::pitch :
-      return tilt_switch * atan2(getacc(GD::Xacc), sqrt(getacc(GD::Yacc)*getacc(GD::Yacc) + getacc(GD::Zacc)*getacc(GD::Zacc)))*180/3.14159265; //ADD G SENSOR TO POSITION LISTENER AND 
-      //MULTIPLY BOTH PITCH AND ROLL BY -1 IF THE SENSOR IS UPSIDE DOWN
-      //atan(X/sqrt(Y^2+Z^2)
-      break;
-      case Angle::roll :
-      return tilt_switch * -atan2(getacc(GD::Yacc), sqrt(getacc(GD::Xacc)*getacc(GD::Xacc) + getacc(GD::Zacc)*getacc(GD::Zacc)))*180/3.14159265;
-      //-atan(Y/sqrt(X^2+Z^2)
-      break;
-      default : break;
-    }
+  case Angle::pitch:
+    return tilt_switch * atan2(getacc(GD::Xacc), sqrt(getacc(GD::Yacc) * getacc(GD::Yacc) + getacc(GD::Zacc) * getacc(GD::Zacc))) * 180 / 3.14159265; //ADD G SENSOR TO POSITION LISTENER AND
+    //MULTIPLY BOTH PITCH AND ROLL BY -1 IF THE SENSOR IS UPSIDE DOWN
+    //atan(X/sqrt(Y^2+Z^2)
+    break;
+  case Angle::roll:
+    return tilt_switch * -atan2(getacc(GD::Yacc), sqrt(getacc(GD::Xacc) * getacc(GD::Xacc) + getacc(GD::Zacc) * getacc(GD::Zacc))) * 180 / 3.14159265;
+    //-atan(Y/sqrt(X^2+Z^2)
+    break;
+  default:
+    break;
   }
+}
+double Gyro::getAvg(Angle a){
+  const int ITER_CNT = 5;
+  double pitches[ITER_CNT];
+  double rolls[ITER_CNT];
+  for(int i = 0; i < ITER_CNT; i++ ){
+    read();
+    pitches[i] = get(Angle::pitch);
+    rolls[i] = get(Angle::roll);
+  }
+  isort(pitches, ITER_CNT);
+  isort(rolls, ITER_CNT);
+  switch (a)
+  {
+    case Angle::pitch:
+      return pitches[ITER_CNT/2];
+      break;
+    case Angle::roll:
+      return rolls[ITER_CNT/2];
+      break;
+  }
+}
+void isort(double *a, int n)
+{
+ for (int i = 1; i < n; ++i)
+ {
+   double j = a[i];
+   int k;
+   for (k = i - 1; (k >= 0) && (j > a[k]); k--)
+   {
+     a[k + 1] = a[k];
+   }
+   a[k + 1] = j;
+ }
+}

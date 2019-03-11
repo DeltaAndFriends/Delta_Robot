@@ -136,6 +136,7 @@ void loop() {
     int k = 1;
     robot.moveMotors(-178/k, 289/k, 590/k, 0, 0, 0);
     for(int j = 0; j < 10; j++){
+      digitalWrite(32, !digitalRead(32));
       for(int i = 0; i < 72; i++){
        robot.moveMotors(
        -arr[i][0]/k,
