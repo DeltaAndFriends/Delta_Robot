@@ -46,6 +46,18 @@ void check_mode()
   }
 }
 
+int arr1[8][6] = {
+  {215, 224, 35, -81, -7, 68},
+  {444, -354, 235, -6, -86, 177},
+  {-602, 321, 168, -187, 216, -259},
+  {-279, 253, -564, 662, -189, -378}, 
+  {787, -530, -86, -413, -452, 607},
+  {-693, -166, 411, -541, 574, -240}, 
+  {477, 372, -578, 704, -484, 128},
+  {-788, -233, 239, -356, 475, -333}
+};
+
+
 int arr[72][6] = {
     {21, -39, 13, 0, 0, 0},
     {17, -37, 15, 0, 0, 0},
@@ -123,32 +135,32 @@ int arr[72][6] = {
 void loop() {
   delay(10);
 
-  while(1){
-    gyro_on_demand();
-    delay(100);
-  }
+  while(0){
+   gyro_on_demand();
+   delay(100);
+    }
 
-  while(1){
-
+    while(1){
     robot.achieve(0,0,0,0,0,0);
-    robot.achieve(0,0,0,0,0,0);
+    
+    //robot.achieve(0,0,0,0,0,0);
+    
 
-    int k = 1;
-    robot.moveMotors(-178/k, 289/k, 590/k, 0, 0, 0);
-    for(int j = 0; j < 10; j++){
+    int k = 2;
+    //robot.moveMotors(-178/k, 289/k, 590/k, 0, 0, 0);
+    for(int j = 0; j < 1u; j++){
       digitalWrite(32, !digitalRead(32));
-      for(int i = 0; i < 72; i++){
+      for(int i = 0; i < sizeof(arr1)/(6*sizeof(int)); i++){
        robot.moveMotors(
-       -arr[i][0]/k,
-       -arr[i][1]/k,
-       -arr[i][2]/k,
-       -arr[i][3]/k,
-       -arr[i][4]/k,
-       -arr[i][5]/k);
+       -arr1[i][0]/k,
+       -arr1[i][1]/k,
+       -arr1[i][2]/k,
+       -arr1[i][3]/k,
+       -arr1[i][4]/k,
+       -arr1[i][5]/k);
       } 
     }
   }
-  while(1);
 }
 
 float gyro_last_data[6] = {0, 0, 0, 0, 0, 0};
@@ -165,14 +177,14 @@ void gyro_vector() {
       gyro_current_data[i+3] = robot.m_gyros.at(i).getAvg(Angle::roll);
     }
 
-    Serial.print("(");
+    Serial.print("{");
     for (int i = 0; i < 6; ++i)
     {
     Serial.print(round((gyro_current_data[i] - gyro_last_data[i])*80/9));
     Serial.print(", ");
     gyro_last_data[i] = gyro_current_data[i];
     }
-    Serial.println("\b\b)");
+    Serial.println("\b\b}");
       delay(100);
   }
 

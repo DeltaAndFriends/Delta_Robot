@@ -109,7 +109,8 @@ double Gyro::get(Angle a)
   }
 }
 double Gyro::getAvg(Angle a){
-  const int ITER_CNT = 30;
+  const int ITER_CNT = 20;
+  const int AVG_OFFSET = 5;
   double pitches[ITER_CNT];
   double rolls[ITER_CNT];
   for(int i = 0; i < ITER_CNT; i++ ){
@@ -117,17 +118,33 @@ double Gyro::getAvg(Angle a){
     pitches[i] = get(Angle::pitch);
     rolls[i] = get(Angle::roll);
   }
-  isort(pitches, ITER_CNT);
-  isort(rolls, ITER_CNT);
   switch (a)
   {
+     case Angle::roll:
+     {
+      isort(rolls, ITER_CNT);
+      int avgRoll = 0;
+      for(int i = AVG_OFFSET; i < ITER_CNT-AVG_OFFSET; i++){
+         avgRoll+= rolls[i];
+      }
+      return avgRoll / (ITER_CNT - 2*AVG_OFFSET);
+      break;
+     }
     case Angle::pitch:
-      return pitches[ITER_CNT/2];
-      break;
-    case Angle::roll:
-      return rolls[ITER_CNT/2];
-      break;
+    {
+      isort(pitches, ITER_CNT);
+      int avgPitch = 0;
+      for(int i = AVG_OFFSET; i < ITER_CNT-AVG_OFFSET; i++){
+         avgPitch+= pitches[i];
+      }
+      return avgPitch / (ITER_CNT - 2*AVG_OFFSET);
+      //break;
+    }
+   
   }
+  
+ 
+  
 }
 void Gyro::isort(double *a, int n)
 {

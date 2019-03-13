@@ -150,8 +150,8 @@ void Robot::achieve(double x_1, double x_2, double x_3, double y_1, double y_2, 
     Stepper* motor = m_motors.at(i);
     delay(100);
     m_gyros.at(i).read();
-    X = m_gyros.at(i).get(Angle::pitch);
-    Y = m_gyros.at(i).get(Angle::roll);
+    X = m_gyros.at(i).getAvg(Angle::pitch);
+    Y = m_gyros.at(i).getAvg(Angle::roll);
     
    //Serial.println(motor->grad_to_steps(X-XtoAchieve[i]));
    //Serial.println(motor->grad_to_steps(YtoAchieve[i])-Y);

@@ -251,7 +251,7 @@ void steppersInit(){
   interrupts();
 
   double accel = 1600;
-  double del = 200;
+  double del = 250;
   steppers[0].dirFunc = M1DIR;
   steppers[0].stepFunc = M1Step;
   steppers[0].acceleration = accel;
