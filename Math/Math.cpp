@@ -1,11 +1,6 @@
-#include <iostream>
-#include <vector>
-#include <stdexcept>
-#include <utility>
-#include <cmath>
 #include "Math.h"
 
-Matrix::Matrix(const std::vector<std::vector<Matrix::value_t>> &arr, size_t _row, size_t _column)
+Matrix::Matrix(const std::vector<std::vector<value_t>> &arr, size_t _row, size_t _column)
     : row(_row), cols(_column), m_values(arr), m_index{ _row, _column }
 {}
 
@@ -92,11 +87,11 @@ Matrix Matrix::operator*(const Matrix& other) const {
     throw std::invalid_argument("Matrix::operator*: Matrix1's columns has to equal to Matrix2's rows");
 }
 
-Matrix::value_t& Matrix::operator[](const Index& index) {
+value_t& Matrix::operator[](const Index& index) {
     return m_values[index.row()][index.column()];
 }
 
-Matrix::value_t Matrix::operator[](const Index& index) const {
+value_t Matrix::operator[](const Index& index) const {
     return m_values[index.row()][index.column()];
 }
 
@@ -106,6 +101,8 @@ Matrix& Matrix::operator=(const Matrix& other) {
     }
     m_index = other.m_index;
     m_values = other.m_values;
+    cols = other.cols;
+    row = other.row;
     return *this;
 }
 
@@ -139,17 +136,17 @@ Matrix::Index::Index(size_t row, size_t column)
 }
 
 
-Point3D& Point3D::operator-(const Point3D& p) {
+Point3D& Point3D::operator-(const Point3D& p) const {
   Point3D ans(x - p.x, y - p.y, z - p.z);
   return ans;
 }
 
-Point3D& Point3D::operator-() {
+Point3D& Point3D::operator-() const{
   Point3D ans(-x, -y, -z);
   return ans;
 }
 
-Point3D& Point3D::operator+(const Point3D& p) {
+Point3D& Point3D::operator+(const Point3D& p) const {
   Point3D ans(x + p.x, y + p.y, z + p.z);
   return ans;
 }
@@ -161,17 +158,71 @@ Point3D& Point3D::operator=(const Point3D& p) {
   return *this;
 }
 
+Point3D& Point3D::operator*(const value_t v) const {
+  Point3D ans(v*x, v*y, v*z);
+  return ans;
+}
+
+Point3D& Point3D::operator/(const value_t v) const {
+  Point3D ans(x/v, y/v, z/v);
+  return ans;
+}
+
 bool Point3D::operator==(const Point3D& p) const {
   return bool(x == p.x && y == p.y && z == p.z);
 }
 
-std::pair<Sphere, Plane> find_sphere_intersections(const Sphere& a, const Sphere& b) {
+bool Sphere::operator==(const Sphere& s) const {
+    return bool(m_center == s.m_center && m_radius == s.m_radius);
+}
+
+
+// When using this function, check the return type
+std::variant<Circle, double, std::nullopt_t> find_sphere_intersections(const Sphere& a, const Sphere& b) {
   double d = distance(a.m_center, b.m_center);
-  assert(d > a.m_radius + b.m_radius);
-  assert(d < abs(a.m_radius - b.m_radius));
-  assert(d == 0 && a.m_center == b.m_center);
 
-  double r_a = (pow(a.m_radius, 2) - pow(b.m_radius, 2) + pow(d, 2)) / (2 * d)
-  double h = sqrt(pow(a.m_radius, 2) - pow(r_a, 2));
+  if (d > a.m_radius + b.m_radius || d < abs(a.m_radius - b.m_radius))
+  {
+    return std::nullopt;
+  }
+  else if (a == b)
+  {
+    return std::numeric_limits<double>::infinity();
+  }
 
+  double r_a = (pow(a.m_radius, 2) - pow(b.m_radius, 2) + pow(d, 2)) / (2 * d);
+
+  Sphere result_sphere(
+      a.m_center + (a.m_center - b.m_center)*a.m_radius/d,
+      sqrt(pow(a.m_radius, 2) - pow(r_a, 2))
+  );
+
+  // l(a, b, c) -> a^2 + b^2 + c^2
+  const auto l = [](const Point3D& p) -> value_t {
+      return pow(p.get_x(), 2) + pow(p.get_y(), 2) + pow(p.get_z(), 2);
+  };
+
+  // http://www.ambrsoft.com/TrigoCalc/Sphere/TwoSpheres/Intersection.htm
+  // A transitional part of the algorithm
+  // It was created to calculate x2-x1, y2-y1, z2-z1
+  Point3D p(b.m_center - a.m_center);
+    // TODO: Check if A, B, C < 0
+  value_t A = 2*p.get_x();
+  value_t B = 2*p.get_y();
+  value_t C = 2*p.get_z();
+  value_t D = l(a.m_center) - l(b.m_center);
+  value_t mod_N = sqrt(l(p));
+
+  value_t cos_x = A / mod_N;
+  value_t cos_y = B / mod_N;
+  value_t cos_z = C / mod_N;
+
+  Plane result_plane(
+      result_sphere.m_center,
+      cos_x,
+      cos_y,
+      cos_z
+  );
+
+  return std::pair(result_sphere, result_plane);
 }
