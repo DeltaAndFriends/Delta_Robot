@@ -79,9 +79,10 @@ namespace Delta
        * 
        */
       void gyro();
+      std::vector<Gyro> m_gyros; //has to be private
     private:
       const Geometry c_geometry;
-      std::vector<Gyro> m_gyros;
+
       std::vector<Motor*> m_motors;
       Magnet m_magnet;
       const std::vector<Scenario>* m_scenario{nullptr};
